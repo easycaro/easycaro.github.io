@@ -1,12 +1,3 @@
-window.Module = {
-    onRuntimeInitialized: function () {
-        if (window.ksh_on_loaded_wasm) {
-            window.ksh_on_loaded_wasm();
-        }
-        window.ksh_loaded_wasm = true;
-    },
-};
-
 $(function () {
     'use strict';
 
@@ -44,6 +35,7 @@ $(function () {
         ksh_get_output_string = Module.cwrap('ksh_get_output', 'string', null);
 
         btn_start.prop('disabled', false);
+        $('#btn_download_logs').show();
         update_ws_status('Connected', '#00c853');
 
         setInterval(function () {
@@ -412,6 +404,32 @@ $(function () {
     });
 
     // END BOARD
+
+    function offerFileAsDownload(filename, mime) {
+        mime = mime || 'application/octet-stream';
+
+        let content = FS.readFile(filename);
+        console.log('Offering download of ' + filename + ', with ' + content.length + ' bytes...');
+
+        var a = document.createElement('a');
+        a.download = 'ksh.csv';
+        a.href = URL.createObjectURL(new Blob([content], { type: mime }));
+        a.style.display = 'none';
+
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+        }, 2000);
+    }
+
+    $('#btn_download_logs').hide().click(function (event) {
+        event.preventDefault();
+        if (FS) {
+            offerFileAsDownload('/persistent_data/ksh.csv', 'text/csv');
+        }
+    });
 
     $('#row_setting, #row_play').hide();
     set_panel_state(false);
